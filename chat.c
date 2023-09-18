@@ -63,6 +63,13 @@ void client_side(const char* ip_address, int port){
   }
 }
 
+int isValidIpAddress(char *ipAddress){
+    struct sockaddr_in sa;
+    int result = inet_pton(AF_INET, ipAddress, &(sa.sin_addr)); //1 for valid, 0 for invalid
+    //printf("%d\n", result);
+    return result;
+}
+
 int main(int argc, char* argv[]){
   if(argc == 1){
     server_side();
@@ -80,13 +87,35 @@ int main(int argc, char* argv[]){
   }
 
   if(strcmp(argv[1], "-s") == 0){
-    const char* ip_address = argv[2];
+    char* ip_address = argv[2];
     int port = atoi(argv[4]);
+    //SANITY CHECK
+    if(isValidIpAddress(ip_address) == 0 || check_port(port) == 1){
+      if(isValidIpAddress(ip_address) == 0){
+        printf("Invalid IP address\n");
+      }
+      if(check_port(port) == 1){
+        printf("Invalid port\n");
+      }
+      exit(1);
+    }
+
     client_side(ip_address, port);
 
   } else if(strcmp(argv[1], "-p") == 0){
-    const char* ip_address = argv[4];
+    char* ip_address = argv[4];
     int port = atoi(argv[2]);
+    //SANITY CHECK
+    if(isValidIpAddress(ip_address) == 0 || check_port(port) == 1){
+      if(isValidIpAddress(ip_address) == 0){
+        printf("Invalid IP address\n");
+      }
+      if(check_port(port) == 1){
+        printf("Invalid port\n");
+      }
+      exit(1);
+    }
+
     client_side(ip_address, port);
 
   } else{
