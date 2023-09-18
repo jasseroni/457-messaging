@@ -22,15 +22,21 @@
 #include <sys/socket.h>
 
 void server_side(){
-  printf("hello!\n");
+  printf("Server side!\n");
+}
+
+void client_side(const char* ip_address, int port){
+  printf("Client side!\n");
+  printf("Address: %s\nPort: %d\n", ip_address, port);
+  // Add actual client logic here
 }
 
 int check_port(int port){
-  //Check if port is in range
+  // Check if port is in range
   if(port < 1 || port > 65535){
     return 1;
   }
-  //Check if port is in use
+
   int socket_fd = socket(AF_INET, SOCK_STREAM, 0);
   if(socket_fd < 0) {
     perror("socket");
@@ -46,11 +52,11 @@ int check_port(int port){
   if (bind(socket_fd, (struct sockaddr*)&server_addr, sizeof(server_addr)) < 0) {
       // Port is in use
       close(socket_fd);
-      return 1; // Return 1 to indicate an invalid port
+      return 1;
   }
   // Port is not in use
   close(socket_fd);
-  return 0; // Return 0 to indicate a valid port
+  return 0;
 }
 
 int main(int argc, char* argv[]){
@@ -58,58 +64,33 @@ int main(int argc, char* argv[]){
     server_side();
     return 0;
   }
-  //HELP
-	if (strcmp(argv[1], "-h") == 0){
+
+  if (strcmp(argv[1], "-h") == 0){
     printf("This program is designed to act as a client and server for messaging.\nPlease use the format ./chat to launch the server, and ./chat -p [port] -s [address] to launch the client.\nThank you!\n");
     exit(0);
   }
-  //Too many arguments
+
   if(argc > 5){
     printf("Too many arguments!!\nPlease use the format ./chat to launch the server, and ./chat -p [port] -s [address] to launch the client.\nThank you!\n");
     exit(0);
   }
-  
 
-  struct sockaddr_in addr;
-  //memset(&addr, 0, sizeof(addr)); //clearing structure
-  addr.sin_family = AF_INET; //using IPv4
-  
-  //CLIENT
-  if(strcmp(argv[1], "-s") == 0){ //if first argument specifies address
+  //struct sockaddr_in addr;
+  //addr.sin_family = AF_INET;
+
+  if(strcmp(argv[1], "-s") == 0){
     const char* ip_address = argv[2];
     int port = atoi(argv[4]);
-    //printf("Address: %s\nPort: %d\n", ip_address, port);
-    struct in_addr addr;
+    client_side(ip_address, port);
 
-    //CHECK SANITY
-    if(check_port(port) != 0 || inet_pton(AF_INET, ip_address, &addr) <= 0){
-      if(check_port(port) != 0){
-        printf("Invalid port number: %d\n", port);
-      }
-      if(inet_pton(AF_INET, ip_address, &addr) <= 0){
-        printf("Invalid IP address: %s\n", ip_address);
-      }
-      return 1;
-    }
-
-
-  } else if(strcmp(argv[1], "-p") == 0){ //if first argument specifies port
+  } else if(strcmp(argv[1], "-p") == 0){
     const char* ip_address = argv[4];
     int port = atoi(argv[2]);
+    client_side(ip_address, port);
 
-    //CHECK SANITY
-    if(check_port(port) != 0 || inet_pton(AF_INET, ip_address, &addr) <= 0){
-      if(check_port(port) != 0){
-        printf("Invalid port number: %d\n", port);
-      }
-      if(inet_pton(AF_INET, ip_address, &addr) <= 0){
-        printf("Invalid IP address: %s\n", ip_address);
-      }
-      return 1;
-    }
   } else{
     printf("Incorrect arguments.\nPlease use the format ./chat to launch the server, and ./chat -p [port] -s [address] to launch the client.\nThank you!\n");
   }
+
   return 0;
 }
-
