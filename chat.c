@@ -66,17 +66,14 @@ int main(int argc, char* argv[]){
   }
 
   if (strcmp(argv[1], "-h") == 0){
-    printf("This program is designed to act as a client and server for messaging.\nPlease use the format ./chat to launch the server, and ./chat -p [port] -s [address] to launch the client.\nThank you!\n");
+    perror("This program is designed to act as a client and server for messaging.\nPlease use the format ./chat to launch the server, and ./chat -p [port] -s [address] to launch the client.\nThank you!\n");
     exit(0);
   }
 
   if(argc > 5){
-    printf("Too many arguments!!\nPlease use the format ./chat to launch the server, and ./chat -p [port] -s [address] to launch the client.\nThank you!\n");
-    exit(0);
+    perror("Too many arguments!!\nPlease use the format ./chat to launch the server, and ./chat -p [port] -s [address] to launch the client.\nThank you!\n");
+    exit(1);
   }
-
-  //struct sockaddr_in addr;
-  //addr.sin_family = AF_INET;
 
   if(strcmp(argv[1], "-s") == 0){
     const char* ip_address = argv[2];
