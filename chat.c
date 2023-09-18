@@ -70,7 +70,7 @@ int main(int argc, char* argv[]){
   }
 
   if (strcmp(argv[1], "-h") == 0){
-    perror("This program is designed to act as a client and server for messaging.\nPlease use the format ./chat to launch the server, and ./chat -p [port] -s [address] to launch the client.\nThank you!\n");
+    printf("This program is designed to act as a client and server for messaging.\nPlease use the format ./chat to launch the server, and ./chat -p [port] -s [address] to launch the client.\nThank you!\n");
     exit(0);
   }
 
