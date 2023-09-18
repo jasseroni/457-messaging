@@ -21,16 +21,6 @@
 #include <arpa/inet.h>
 #include <sys/socket.h>
 
-void server_side(){
-  printf("Server side!\n");
-}
-
-void client_side(const char* ip_address, int port){
-  printf("Client side!\n");
-  printf("Address: %s\nPort: %d\n", ip_address, port);
-  // Add actual client logic here
-}
-
 int check_port(int port){
   // Check if port is in range
   if(port < 1 || port > 65535){
@@ -57,6 +47,20 @@ int check_port(int port){
   // Port is not in use
   close(socket_fd);
   return 0;
+}
+
+void server_side(){
+  printf("Server side!\n");
+}
+
+void client_side(const char* ip_address, int port){
+  printf("Client side!\n");
+  printf("Address: %s\nPort: %d\n", ip_address, port);
+  
+  if(check_port(port) == 1){
+    printf("Invalid port\n");
+    exit(1);
+  }
 }
 
 int main(int argc, char* argv[]){
