@@ -49,7 +49,7 @@ int check_port(int port){
   return 0;
 }
 
-void server_side(){
+void server_side(int port){
     printf("Welcome to chat!\n");
 
     int listen_fd, conn_fd;
@@ -68,7 +68,7 @@ void server_side(){
     memset(&server_addr, 0, sizeof(server_addr));
     server_addr.sin_family = AF_INET;
     server_addr.sin_addr.s_addr = INADDR_ANY;
-    server_addr.sin_port = htons(8080);  // Change later for specification
+    server_addr.sin_port = htons(port);  // Change later for specification
 
     if (bind(listen_fd, (struct sockaddr*)&server_addr, sizeof(server_addr)) < 0) {
         perror("bind");
@@ -78,7 +78,7 @@ void server_side(){
     char str[INET_ADDRSTRLEN];
     inet_ntop(AF_INET, &server_addr, str, INET_ADDRSTRLEN);
 
-    printf("Waiting for a connection on %s port %d\n", str, server_addr.sin_port);
+    printf("Waiting for a connection on %s port %d\n", inet_ntoa(client_addr.sin_addr), port);
 
     //Listen on socket
     if (listen(listen_fd, 10) < 0) {
@@ -86,8 +86,7 @@ void server_side(){
         exit(1);
     }
 
-    printf("Listening on port 8080...\n");
-
+    //printf("Listening on port %d...\n", port);
     //Accept client connection
     client_len = sizeof(client_addr);
     conn_fd = accept(listen_fd, (struct sockaddr*)&client_addr, &client_len);
@@ -96,32 +95,31 @@ void server_side(){
         exit(1);
     }
 
-    printf("Connected to client!\n");
+    printf("Found a friend! You receive first.\n");
 
-    // Step 5: Interact with the client
+    //Messaging client
     while (1) {
-        // Clear buffer
+        //Clear buffer
         memset(buffer, 0, sizeof(buffer));
 
-        // Receive a message from the client
+        //Receive message from client
         int read_bytes = recv(conn_fd, buffer, sizeof(buffer), 0);
         if (read_bytes <= 0) {
-            printf("Client disconnected or error.\n");
+            printf("\nClient disconnected or error.\n");
             break;
         }
 
-        // Print the client's message to the screen
-        printf("Client: %s", buffer);
+        //Client's message through buffer
+        printf("Friend: %s", buffer);
 
-        // Get a message to send to the client
+        //Create message to send
         printf("You: ");
         fgets(buffer, sizeof(buffer), stdin);
 
-        // Send the message to the client
         send(conn_fd, buffer, strlen(buffer), 0);
     }
 
-    // Step 6: Close the sockets
+    //Close sockets
     close(conn_fd);
     close(listen_fd);
 }
@@ -133,13 +131,15 @@ int isValidIpAddress(char *address){
 }
 
 void client_side(const char* ip_address, int port) {
-    printf("Client side!\n");
+    /*printf("Client side!\n");
     printf("Address: %s\nPort: %d\n", ip_address, port);
+    */
 
     int client_fd;
     struct sockaddr_in server_addr;
     char buffer[1024];
 
+    //Check socket
     client_fd = socket(AF_INET, SOCK_STREAM, 0);
     if (client_fd < 0) {
         perror("socket");
@@ -150,17 +150,21 @@ void client_side(const char* ip_address, int port) {
     server_addr.sin_family = AF_INET;
     server_addr.sin_port = htons(port);
 
+    //Check IP address
     if (inet_pton(AF_INET, ip_address, &server_addr.sin_addr) <= 0) {
         perror("inet_pton");
         exit(1);
     }
 
+    printf("Connecting to server...\n");
+
+    //Attempt to connect
     if (connect(client_fd, (struct sockaddr*)&server_addr, sizeof(server_addr)) < 0) {
         perror("connect");
         exit(1);
     }
 
-    printf("Connected to server!\n");
+    printf("Connected!\nConnected to a friend! You send first\n");
 
     while (1) {
         printf("You: ");
@@ -174,7 +178,7 @@ void client_side(const char* ip_address, int port) {
             break;
         }
 
-        printf("Server: %s", buffer);
+        printf("Friend: %s", buffer);
     }
 
     close(client_fd);
@@ -186,7 +190,7 @@ int main(int argc, char* argv[]) {
 
     //SERVER
     if(argc == 1) {
-        server_side();
+        server_side(port);
         return 0;
     }
 
