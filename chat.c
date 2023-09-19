@@ -22,7 +22,7 @@
 #include <sys/socket.h>
 
 int check_port(int port){
-  // Check if port is in range
+  //Check if port is in range
   if(port < 1 || port > 65535){
     return 1;
   }
@@ -39,43 +39,48 @@ int check_port(int port){
   server_addr.sin_addr.s_addr = INADDR_ANY;
   server_addr.sin_port = htons(port);
 
-  if (bind(socket_fd, (struct sockaddr*)&server_addr, sizeof(server_addr)) < 0) {
-      // Port is in use
-      close(socket_fd);
-      return 1;
-  }
-  // Port is not in use
+  //Check is port is in use
+  /*if (bind(socket_fd, (struct sockaddr*)&server_addr, sizeof(server_addr)) < 0) {
+    close(socket_fd);
+    return 1;
+  }*/
+  //If port is not in use
   close(socket_fd);
   return 0;
 }
 
 void server_side(){
-    printf("Server side!\n");
+    printf("Welcome to chat!\n");
 
     int listen_fd, conn_fd;
     struct sockaddr_in server_addr, client_addr;
     socklen_t client_len;
     char buffer[1024];
 
-    // Step 1: Create a socket
+    //Create a socket
     listen_fd = socket(AF_INET, SOCK_STREAM, 0);
-    if (listen_fd < 0) {
+    if (listen_fd < 0) { //if address is already in use
         perror("socket");
         exit(1);
     }
 
-    // Step 2: Bind to a port
+    //Bind to port
     memset(&server_addr, 0, sizeof(server_addr));
     server_addr.sin_family = AF_INET;
     server_addr.sin_addr.s_addr = INADDR_ANY;
-    server_addr.sin_port = htons(8080);  // Use port 8080
+    server_addr.sin_port = htons(8080);  // Change later for specification
 
     if (bind(listen_fd, (struct sockaddr*)&server_addr, sizeof(server_addr)) < 0) {
         perror("bind");
         exit(1);
     }
 
-    // Step 3: Listen for incoming connections
+    char str[INET_ADDRSTRLEN];
+    inet_ntop(AF_INET, &server_addr, str, INET_ADDRSTRLEN);
+
+    printf("Waiting for a connection on %s port %d\n", str, server_addr.sin_port);
+
+    //Listen on socket
     if (listen(listen_fd, 10) < 0) {
         perror("listen");
         exit(1);
@@ -83,7 +88,7 @@ void server_side(){
 
     printf("Listening on port 8080...\n");
 
-    // Step 4: Accept a client connection
+    //Accept client connection
     client_len = sizeof(client_addr);
     conn_fd = accept(listen_fd, (struct sockaddr*)&client_addr, &client_len);
     if (conn_fd < 0) {
@@ -106,7 +111,7 @@ void server_side(){
         }
 
         // Print the client's message to the screen
-        printf("Client: %s\n", buffer);
+        printf("Client: %s", buffer);
 
         // Get a message to send to the client
         printf("You: ");
@@ -121,7 +126,11 @@ void server_side(){
     close(listen_fd);
 }
 
-
+int isValidIpAddress(char *address){
+    struct sockaddr_in sa;
+    int result = inet_pton(AF_INET, address, &(sa.sin_addr));
+    return result;
+}
 
 void client_side(const char* ip_address, int port) {
     printf("Client side!\n");
@@ -165,7 +174,7 @@ void client_side(const char* ip_address, int port) {
             break;
         }
 
-        printf("Server: %s\n", buffer);
+        printf("Server: %s", buffer);
     }
 
     close(client_fd);
@@ -175,13 +184,13 @@ void client_side(const char* ip_address, int port) {
 int main(int argc, char* argv[]) {
     int port = 8080;  // Default port for the server
 
-    // No arguments given, run as a server on the default port
+    //SERVER
     if(argc == 1) {
         server_side();
         return 0;
     }
 
-    // Help option
+    //HELP
     if (strcmp(argv[1], "-h") == 0) {
         printf("This program is designed to act as a client and server for messaging.\n");
         printf("Please use the format ./chat to launch the server, and ./chat -p [port] -s [address] to launch the client.\n");
@@ -189,7 +198,7 @@ int main(int argc, char* argv[]) {
         return 0;
     }
 
-    // Check for too many arguments
+    //Too many arguments
     if(argc > 5) {
         printf("Too many arguments!\n");
         printf("Please use the format ./chat to launch the server, and ./chat -p [port] -s [address] to launch the client.\n");
@@ -198,11 +207,16 @@ int main(int argc, char* argv[]) {
     }
 
     // Run as a client with server address and port number
-    if((strcmp(argv[1], "-s") == 0 && strcmp(argv[3], "-p") == 0) || 
-       (strcmp(argv[1], "-p") == 0 && strcmp(argv[3], "-s") == 0)) {
+    if((strcmp(argv[1], "-s") == 0 && strcmp(argv[3], "-p") == 0) || (strcmp(argv[1], "-p") == 0 && strcmp(argv[3], "-s") == 0)) {
 
-        const char* ip_address = (strcmp(argv[1], "-s") == 0) ? argv[2] : argv[4];
+        char* ip_address = (strcmp(argv[1], "-s") == 0) ? argv[2] : argv[4];
         port = (strcmp(argv[1], "-p") == 0) ? atoi(argv[2]) : atoi(argv[4]);
+        //SANITY CHECK
+        /*if(check_port(port) == 1 || isValidIpAddress(ip_address) == 0){
+            if(check_port(port) == 1) printf("Invalid port\n");
+            if(isValidIpAddress(ip_address) == 0) printf("Invalid IP address\n");
+            exit(1);
+        }*/
         client_side(ip_address, port);
         return 0;
     }
