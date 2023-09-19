@@ -19,6 +19,7 @@
 #include <netinet/in.h>
 #include <unistd.h>
 #include <arpa/inet.h>
+#include <ifaddrs.h>
 #include <sys/socket.h>
 
 int check_port(int port){
@@ -54,8 +55,23 @@ void server_side(int port){
 
     int listen_fd, conn_fd;
     struct sockaddr_in server_addr, client_addr;
-    socklen_t client_len;
+    socklen_t client_len;  
     char buffer[1024];
+
+    struct ifaddrs *ifap, *ifa;
+    struct sockaddr_in *sa;
+    char *addr;
+
+    getifaddrs (&ifap);
+    for (ifa = ifap; ifa; ifa = ifa->ifa_next) {
+        if (ifa->ifa_addr && ifa->ifa_addr->sa_family==AF_INET) {
+            sa = (struct sockaddr_in *) ifa->ifa_addr;
+            addr = inet_ntoa(sa->sin_addr);
+            //printf("Interface: %s\tAddress: %s\n", ifa->ifa_name, addr);
+        }
+    }
+
+    freeifaddrs(ifap);
 
     //Create a socket
     listen_fd = socket(AF_INET, SOCK_STREAM, 0);
@@ -68,17 +84,14 @@ void server_side(int port){
     memset(&server_addr, 0, sizeof(server_addr));
     server_addr.sin_family = AF_INET;
     server_addr.sin_addr.s_addr = INADDR_ANY;
-    server_addr.sin_port = htons(port);  // Change later for specification
+    server_addr.sin_port = htons(port);  //Change later for specification
 
     if (bind(listen_fd, (struct sockaddr*)&server_addr, sizeof(server_addr)) < 0) {
         perror("bind");
         exit(1);
     }
 
-    char str[INET_ADDRSTRLEN];
-    inet_ntop(AF_INET, &server_addr, str, INET_ADDRSTRLEN);
-
-    printf("Waiting for a connection on %s port %d\n", inet_ntoa(client_addr.sin_addr), port);
+    printf("Waiting for a connection on %s port %d\n", addr, port);
 
     //Listen on socket
     if (listen(listen_fd, 10) < 0) {
