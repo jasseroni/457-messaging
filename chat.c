@@ -177,7 +177,7 @@ int main(int argc, char* argv[]) {
 
     // No arguments given, run as a server on the default port
     if(argc == 1) {
-        server_side(port);
+        server_side();
         return 0;
     }
 
