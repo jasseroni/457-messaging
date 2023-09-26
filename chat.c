@@ -14,7 +14,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
-
+#include <errno.h>
 #include <sys/types.h>
 #include <netinet/in.h>
 #include <unistd.h>
@@ -56,7 +56,7 @@ void server_side(int port){
     int listen_fd, conn_fd;
     struct sockaddr_in server_addr, client_addr;
     socklen_t client_len;  
-    char buffer[1024];
+    char buffer[141];
 
     struct ifaddrs *ifap, *ifa;
     struct sockaddr_in *sa;
@@ -129,6 +129,12 @@ void server_side(int port){
         printf("You: ");
         fgets(buffer, sizeof(buffer), stdin);
 
+        //Checks for buffer overflow
+        if (buffer[strlen(buffer) - 1] != '\n') {
+            printf("Error: Input too long.\n");
+            while (getchar() != '\n');
+        continue;
+        }
         send(conn_fd, buffer, strlen(buffer), 0);
     }
 
@@ -150,7 +156,7 @@ void client_side(const char* ip_address, int port) {
 
     int client_fd;
     struct sockaddr_in server_addr;
-    char buffer[1024];
+    char buffer[141];
 
     //Check socket
     client_fd = socket(AF_INET, SOCK_STREAM, 0);
@@ -182,6 +188,13 @@ void client_side(const char* ip_address, int port) {
     while (1) {
         printf("You: ");
         fgets(buffer, sizeof(buffer), stdin);
+
+        if (buffer[strlen(buffer) - 1] != '\n') {
+            printf("Error: Input too long.\n");
+            while (getchar() != '\n');
+            continue;
+        }
+
         send(client_fd, buffer, strlen(buffer), 0);
 
         memset(buffer, 0, sizeof(buffer));
@@ -199,7 +212,7 @@ void client_side(const char* ip_address, int port) {
 
 
 int main(int argc, char* argv[]) {
-    int port = 8080;  // Default port for the server
+    int port = 6080;  // Default port for the server
 
     //SERVER
     if(argc == 1) {
